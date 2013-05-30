@@ -25,4 +25,11 @@ interface LexerInterface
      */
     public function setId($id);
 
+    /**
+     * Set value of Weight
+     *
+     * @param int $weight
+     */
+    public function setWeight($weight);
+
 }

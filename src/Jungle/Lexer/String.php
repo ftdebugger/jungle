@@ -14,7 +14,7 @@ use Jungle\Code\Statement\IfStatement;
 use Jungle\Code\Statement\RawBlock;
 use Jungle\Lexer\LexerInterface;
 
-class String implements LexerInterface
+class String extends AbstractLexer implements LexerInterface
 {
 
     /**

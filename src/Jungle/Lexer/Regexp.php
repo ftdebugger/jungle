@@ -16,7 +16,7 @@ use Jungle\Code\Statement\ScalarStatement;
 use Jungle\Code\Statement\VariableStatement;
 use Jungle\Lexer\LexerInterface;
 
-class Regexp implements LexerInterface
+class Regexp extends AbstractLexer implements LexerInterface
 {
 
     /**

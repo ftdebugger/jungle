@@ -8,6 +8,7 @@
 namespace Jungle;
 
 
+use Jungle\Lexer\AbstractLexer;
 use Jungle\Lexer\LexerFactory;
 use Jungle\Lexer\LexerInterface;
 use Jungle\Parser\Expression;
@@ -57,12 +58,12 @@ class Syntax
      */
     protected function parse()
     {
-        // init lexer
-        if (isset($this->config['terminals']) && is_array($this->config['terminals'])) {
-            foreach (array_keys($this->config['terminals']) as $lexer) {
-                $this->getTerminal($lexer);
-            }
-        }
+//        // init lexer
+//        if (isset($this->config['terminals']) && is_array($this->config['terminals'])) {
+//            foreach (array_keys($this->config['terminals']) as $lexer) {
+//                $this->getTerminal($lexer);
+//            }
+//        }
         // init parser
         if (isset($this->config['nonTerminals']) && is_array($this->config['nonTerminals'])) {
             foreach (array_keys($this->config['nonTerminals']) as $parser) {
@@ -148,6 +149,14 @@ class Syntax
      */
     public function getTerminals()
     {
+        usort(
+            $this->terminals, function ($a, $b) {
+                /** @var $a AbstractLexer */
+                /** @var $b AbstractLexer */
+                return $a->getWeight()-$b->getWeight();
+            }
+        );
+
         return $this->terminals;
     }
 

@@ -19,6 +19,13 @@ class LexerFactory
      */
     public function getLexer($name, $value)
     {
+        if (is_array($value)) {
+            $lexer = $this->getLexer($name, $value['value']);
+            $lexer->setWeight($value['weight']);
+
+            return $lexer;
+        }
+
         if ($value[0] == '/' && strlen($value) > 2) {
             return new Regexp($value, $name);
         }

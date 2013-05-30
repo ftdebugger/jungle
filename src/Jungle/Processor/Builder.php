@@ -104,7 +104,7 @@ class Builder
         $while->setBody($whileBody = new Container());
 
         $whileBody->addLine(new RawBlock('$token = $this->getNextToken($data);'));
-        $whileBody->addLine(new RawBlock('$data = substr($data, strlen($token[1]));'));
+        $whileBody->addLine(new RawBlock('$data = trim(substr($data, strlen($token[1])));'));
         $whileBody->addLine(new RawBlock('$tokens[] = $token;'));
 
         $methodBody = new Container();

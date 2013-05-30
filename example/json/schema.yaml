@@ -1,0 +1,43 @@
+nonTerminals:
+  global:
+    - object
+
+  object:
+    - '{ fields } { $$ = $2; }'
+    - '{ } { $$ = array(); }'
+
+  array:
+    - '[ values ] { $$ = $2; }'
+
+  field:
+    - 'string : value { $$ = array($1 => $3); }'
+
+  fields:
+    - fields , field { $$ = array_merge($1, $3); }
+    - field { $$ = $1; }
+
+  value:
+    - array
+    - object
+    - number { $$ = (float)$1; }
+    - string
+
+  values:
+    - values , value { $1[] = $3; $$ = $1; }
+    - value { $$ = array($1); }
+
+  string:
+    - '" sub " { $$ = $2; }'
+
+  sub:
+    - sub \" sub { $$ = $1 . '"' . $3; }
+    - sub \\ sub { $$ = $1 . '\\' . $3; }
+    - sub char { $$ = $1 . $2; }
+    - char
+    -
+
+terminals:
+  number: '/^[0-9]+(\.\d+|e\d+)?/'
+  char:
+    value: '/^[^"\\][ ]*/'
+    weight: 10

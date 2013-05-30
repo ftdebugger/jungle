@@ -31,7 +31,7 @@ class Expression
      */
     public function parseStatement($ruleString)
     {
-        if (preg_match("#^(?<rule>.+)\\{(?<callback>.+)\\}$#mis", $ruleString, $match)) {
+        if (preg_match("#^(?<rule>.+)\\{(?<callback>[^}]+)\\}$#mis", $ruleString, $match)) {
             $this->callback = $match['callback'];
             $ruleString = $match['rule'];
         } else {

@@ -56,7 +56,7 @@ class Calculator
         $tokens = [];
         while (strlen($data) !== 0) {
             $token = $this->getNextToken($data);
-            $data = substr($data, strlen($token[1]));
+            $data = trim(substr($data, strlen($token[1])));
             $tokens[] = $token;
         }
         $tokens[] = array(13, '');
@@ -65,26 +65,6 @@ class Calculator
 
     public function getNextToken($data)
     {
-        if (preg_match('/^[0-9]+/', $data, $match)) {
-            return [0, $match[0]];
-        }
-
-        if ('(' === substr($data, 0, 1)) {
-            return [1, '('];
-        }
-
-        if (')' === substr($data, 0, 1)) {
-            return [2, ')'];
-        }
-
-        if ('^' === substr($data, 0, 1)) {
-            return [3, '^'];
-        }
-
-        if ('*' === substr($data, 0, 1)) {
-            return [4, '*'];
-        }
-
         if ('/' === substr($data, 0, 1)) {
             return [5, '/'];
         }
@@ -95,6 +75,26 @@ class Calculator
 
         if ('-' === substr($data, 0, 1)) {
             return [7, '-'];
+        }
+
+        if ('*' === substr($data, 0, 1)) {
+            return [4, '*'];
+        }
+
+        if ('^' === substr($data, 0, 1)) {
+            return [3, '^'];
+        }
+
+        if ('(' === substr($data, 0, 1)) {
+            return [1, '('];
+        }
+
+        if (')' === substr($data, 0, 1)) {
+            return [2, ')'];
+        }
+
+        if (preg_match('/^[0-9]+/', $data, $match)) {
+            return [0, $match[0]];
         }
 
         throw new \Exception("Syntax error");
