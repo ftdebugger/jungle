@@ -69,6 +69,11 @@ class Table
     protected $table;
 
     /**
+     * @var array
+     */
+    protected $reduces = array();
+
+    /**
      *
      */
     public function __construct()
@@ -153,7 +158,7 @@ class Table
                     $action = array(
                         'reduce',
                         //$situation->getRule()->getId(),
-                        'callback' => $situation->getRule()->getCallback(),
+                        'callback' => $this->getReduce($situation->getRule()->getCallback()),
                         'right' => count($situation->getRule()->getRight()),
                         'left' => $situation->getRule()->getLeft()
                     );
@@ -185,7 +190,7 @@ class Table
     {
         $tokens = [];
 
-        foreach ($syntax->getTokens() as $token) {
+        foreach ($syntax->getNonTerminals() as $token) {
             foreach ($token->getExpressions() as $expression) {
                 $rule = new Rule();
                 $rule->setLeft($token->getName());
@@ -350,6 +355,41 @@ class Table
         }
 
         return $first;
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return int
+     */
+    public function getReduce($string)
+    {
+        $string = trim($string);
+
+        $reduce = array_search($string, $this->reduces);
+        if ($reduce === false) {
+            return array_push($this->reduces, $string) - 1;
+        }
+
+        return $reduce;
+    }
+
+    /**
+     * @return array
+     */
+    public function getReduces()
+    {
+        return $this->reduces;
+    }
+
+    /**
+     * Return value of Table
+     *
+     * @return array
+     */
+    public function getTable()
+    {
+        return $this->table;
     }
 
 }

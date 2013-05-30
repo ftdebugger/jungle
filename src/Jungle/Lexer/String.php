@@ -8,9 +8,11 @@
 namespace Jungle\Lexer;
 
 
+use Jungle\Code\GeneratorInterface;
+use Jungle\Code\Statement\FunctionStatement;
+use Jungle\Code\Statement\IfStatement;
+use Jungle\Code\Statement\RawBlock;
 use Jungle\Lexer\LexerInterface;
-use Jungle\Stream\AbstractStream;
-use Jungle\Token\Token;
 
 class String implements LexerInterface
 {
@@ -35,18 +37,19 @@ class String implements LexerInterface
     }
 
     /**
-     * @param AbstractStream $stream
+     * @param \Jungle\Code\GeneratorInterface $input
      *
-     * @return bool|Token
+     * @return string
      */
-    public function parse(AbstractStream $stream)
+    public function getGenerator(GeneratorInterface $input)
     {
-        if ($stream->compareString($this->value)) {
-            $stream->skipString($this->value);
-            return new Token($this->value, $this->type);
-        }
+        $function = new FunctionStatement('substr', [$input, 0, strlen($this->value)]);
+        $function = new RawBlock(var_export($this->type, true) . ' === ' . $function);
+        $then = new RawBlock('return [' . var_export($this->type, true) . ', ' . var_export($this->value, true)
+        . '];');
 
-        return false;
+        return new IfStatement($function, $then);
     }
+
 
 }

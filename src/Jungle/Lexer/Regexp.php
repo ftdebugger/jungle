@@ -8,9 +8,13 @@
 namespace Jungle\Lexer;
 
 
+use Jungle\Code\GeneratorInterface;
+use Jungle\Code\Statement\FunctionStatement;
+use Jungle\Code\Statement\IfStatement;
+use Jungle\Code\Statement\RawBlock;
+use Jungle\Code\Statement\ScalarStatement;
+use Jungle\Code\Statement\VariableStatement;
 use Jungle\Lexer\LexerInterface;
-use Jungle\Stream\AbstractStream;
-use Jungle\Token\Token;
 
 class Regexp implements LexerInterface
 {
@@ -36,26 +40,23 @@ class Regexp implements LexerInterface
     }
 
     /**
-     * @param AbstractStream $stream
+     * @param \Jungle\Code\GeneratorInterface $input
      *
-     * @return bool|Token
+     * @return string
      */
-    public function parse(AbstractStream $stream)
+    public function getGenerator(GeneratorInterface $input)
     {
-        if (preg_match($this->regexp, $stream->getString(), $match)) {
-            if (isset($match['value'])) {
-                $value = $match['value'];
-            }
-            else {
-                $value = $match[0];
-            }
+        $function = new FunctionStatement('preg_match',
+            array(
+                 new ScalarStatement($this->regexp),
+                 $input,
+                 new VariableStatement('match')
+            )
+        );
+        $then = new RawBlock('return [' . var_export($this->type, true) . ', $match[0]];');
 
-            $stream->skipString($value);
-
-            return new Token($value, $this->type);
-        }
-
-        return false;
+        return new IfStatement($function, $then);
     }
+
 
 }

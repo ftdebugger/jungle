@@ -15,12 +15,16 @@ use Jungle\Code\Statement\RawBlock;
 use Jungle\Code\Statement\ScalarStatement;
 use Jungle\Code\Statement\VariableStatement;
 use Jungle\Code\Statement\WhileStatement;
+use Jungle\SLR\Table;
+use Jungle\Syntax;
 use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\DocBlock\Tag;
 use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
 use Zend\Code\Generator\PropertyGenerator;
+use Zend\Code\Generator\PropertyValueGenerator;
+use Zend\Code\Generator\ValueGenerator;
 use Zend\Code\Reflection\ClassReflection;
 
 class Builder
@@ -32,31 +36,38 @@ class Builder
     protected $tokensConvert = [];
 
     /**
-     * @param array $config
+     * @var ClassGenerator
+     */
+    protected $class;
+
+    /**
+     * @param \Jungle\Syntax $syntax
+     * @param \Jungle\SLR\Table $table
      *
      * @return \Zend\Code\Generator\ClassGenerator
      */
-    public function build(array $config)
+    public function build(Syntax $syntax, Table $table)
     {
-        $class = new ClassGenerator('Test');
-        $class->addPropertyFromGenerator($this->getActionTableProperty());
-        $class->addPropertyFromGenerator($this->getStackProperty());
+        $this->class = new ClassGenerator('Test');
+        $this->class->addPropertyFromGenerator($this->getActionTableProperty($table));
+        $this->class->addPropertyFromGenerator($this->getStackProperty());
 
-        $tokenizer = $this->getTokenizerMethod($config['tokens']);
+        $this->buildParseMethod();
+        $this->buildTokenizerMethod();
+        $this->buildGetNextTokenMethod($syntax);
+        $this->buildReduces($table->getReduces());
 
-//        $class->addMethodFromGenerator($this->constructMethod());
-        $class->addMethodFromGenerator($tokenizer);
-
-        return $class;
+        return $this->class;
     }
 
     /**
      * @return PropertyGenerator
      */
-    protected function getActionTableProperty()
+    protected function getActionTableProperty(Table $table)
     {
         $property = new PropertyGenerator('action', [], PropertyGenerator::FLAG_PROTECTED);
         $property->setDocBlock(new DocBlockGenerator('Syntax analyse action table'));
+        $property->setDefaultValue(new PropertyValueGenerator($table->getTable()));
 
         return $property;
     }
@@ -90,66 +101,41 @@ class Builder
     }
 
     /**
-     * @param array $tokens
-     *
-     * @return MethodGenerator
      */
-    protected function getTokenizerMethod(array $tokens)
+    protected function buildTokenizerMethod()
     {
-        $methodBody = new Container();
-        $methodBody->addLine(new RawBlock('$tokens = [];'));
-
         $while = new WhileStatement(new RawBlock('strlen($data) !== 0'));
         $while->setBody($whileBody = new Container());
 
+        $whileBody->addLine(new RawBlock('$token = $this->getNextToken($data);'));
+        $whileBody->addLine(new RawBlock('$data = substr($data, strlen($token[1]));'));
+        $whileBody->addLine(new RawBlock('$tokens[] = $token;'));
+
+        $methodBody = new Container();
+        $methodBody->addLine(new RawBlock('$tokens = [];'));
         $methodBody->addLine($while);
+        $methodBody->addLine(new RawBlock('$tokens[] = array(\'__END__\', \'\');'));
+        $methodBody->addLine('return $tokens;');
 
         $method = new MethodGenerator('tokenizer', ['data']);
         $method->setBody($methodBody);
 
-        /** @var IfStatement $lastIf */
-        $lastIf = null;
+        $this->class->addMethodFromGenerator($method);
+    }
 
-        foreach ($tokens as $tokenName => $token) {
-            $statement = new IfStatement();
-            if ($token[0] == '/') {
-                $function = new FunctionStatement('preg_match',
-                    array(
-                         new ScalarStatement($token),
-                         new VariableStatement('data'),
-                         new VariableStatement('match')
-                    )
-                );
-                $then = new RawBlock('$token = [' . $this->getTokenId($tokenName) . ', $match[0]];');
-            } else {
-                $function = new FunctionStatement('substr', [new VariableStatement('data'), 0, strlen($token)]);
-                $function = new RawBlock(var_export($token, true) . ' === ' . $function);
-                $then = new RawBlock('$token = [' . $this->getTokenId($tokenName) . ', ' . var_export($token, true)
-                . '];');
-            }
+    protected function buildGetNextTokenMethod(Syntax $syntax)
+    {
+        $method = new MethodGenerator('getNextToken', ['data']);
+        $method->setBody($methodBody = new Container());
 
-            $statement->setStatement($function);
-            $statement->setThenBlock($then);
-
-            if (null === $lastIf) {
-                $lastIf = $statement;
-                $whileBody->addLine($lastIf);
-            } else {
-                $lastIf->setElseBlock($statement);
-                $lastIf = $statement;
-            }
+        foreach ($syntax->getTerminals() as $terminal) {
+            $statement = $terminal->getGenerator(new VariableStatement('data'));
+            $methodBody->addLine($statement);
         }
 
-        if ($lastIf) {
-            $lastIf->setElseBlock('throw new \Exception("Syntax error");');
-        }
+        $methodBody->addLine('throw new \Exception("Syntax error");');
 
-        $whileBody->addLine(new RawBlock('$data = substr($data, strlen($token[1]));'));
-        $whileBody->addLine(new RawBlock('$tokens[] = $token;'));
-
-        $methodBody->addLine('return $tokens;');
-
-        return $method;
+        $this->class->addMethodFromGenerator($method);
     }
 
     /**
@@ -163,6 +149,98 @@ class Builder
             $this->tokensConvert[$token] = count($this->tokensConvert) + 1;
         }
         return $this->tokensConvert[$token];
+    }
+
+    /**
+     * @param array $reduces
+     */
+    protected function buildReduces(array $reduces)
+    {
+        $this->buildReduceMethod();
+
+        foreach ($reduces as $id => $body) {
+            $count = 0;
+
+            $body = preg_replace_callback(
+                "#\\$(?<index>\\d+)#", function ($match) use (&$count) {
+                    $count = max($count, $match['index']);
+
+                    return '$' . chr(ord('a') + $match['index'] - 1);
+                }, $body
+            );
+
+            $body = str_replace('$$', '$returnValue', $body) . PHP_EOL . 'return $returnValue;';
+
+            $params = array();
+            for ($i = 0; $i < $count; $i++) {
+                $params[] = new ParameterGenerator(chr(ord('a') + $i), 'int', new ValueGenerator());
+            }
+
+            $method = new MethodGenerator('reduce' . $id, $params, MethodGenerator::FLAG_PROTECTED);
+            $method->setBody($body);
+
+            $this->class->addMethodFromGenerator($method);
+        }
+    }
+
+    protected function buildReduceMethod()
+    {
+        $method = new MethodGenerator('reduce', ['count', 'index'], MethodGenerator::FLAG_PROTECTED);
+        $body = <<<'EOF'
+$args = array();
+for ($i = 0; $i < $count; $i++) {
+    $this->stack->pop();
+    $args[] = $this->stack->pop();
+}
+
+return call_user_func_array([$this, 'reduce' . $index], $args);
+EOF;
+        $method->setBody($body);
+        $this->class->addMethodFromGenerator($method);
+
+    }
+
+    /**
+     *
+     */
+    protected function buildParseMethod()
+    {
+        $method = new MethodGenerator('parse', ['data']);
+        $body = <<<'EOF'
+$tokens = $this->tokenizer($data);
+$this->stack = new \SplStack();
+$this->stack->push(0);
+
+while (true) {
+    $token = $tokens[0];
+    $state = $this->stack->top();
+    $terminal = $token[0];
+
+    if (!isset($this->action[$state][$terminal])) {
+        throw new \Exception('Token not allowed here (' . $token[1] . ')');
+    }
+
+    $action = $this->action[$state][$terminal];
+    if ($action[0] == 'shift' || $action[0] == 'transition') {
+        $this->stack->push($token[1]);
+        $this->stack->push($action[1]);
+        array_shift($tokens);
+    } elseif ($action[0] == 'reduce') {
+        $value = $this->reduce($action['right'], $action['callback']);
+        array_unshift($tokens, array($action['left'], $value));
+    } elseif ($action[0] == 'accept') {
+        $this->stack->pop();
+        return $this->stack->pop();
+    } else {
+        throw new \RuntimeException('Cannot compile');
+    }
+}
+
+throw new \RuntimeException('Cannot compile. EOF');
+EOF;
+
+        $method->setBody($body);
+        $this->class->addMethodFromGenerator($method);
     }
 
 }

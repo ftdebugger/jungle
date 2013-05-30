@@ -9,6 +9,7 @@ namespace Jungle;
 
 
 use Jungle\Lexer\LexerFactory;
+use Jungle\Lexer\LexerInterface;
 use Jungle\Parser\Expression;
 use Jungle\Parser\ExpressionContainer;
 use Jungle\Parser\Rule;
@@ -25,17 +26,22 @@ class Syntax
     /**
      * @var array
      */
-    protected $lexers = [];
+    protected $terminals = [];
 
     /**
      * @var ExpressionContainer[]
      */
-    protected $tokens = [];
+    protected $nonTerminals = [];
 
     /**
      * @var LexerFactory
      */
     protected $lexerFactory;
+
+    /**
+     * @var array
+     */
+    protected $aliases = array();
 
     /**
      * @param array $config
@@ -52,15 +58,15 @@ class Syntax
     protected function parse()
     {
         // init lexer
-        if (isset($this->config['lexer']) && is_array($this->config['lexer'])) {
-            foreach (array_keys($this->config['lexer']) as $lexer) {
-                $this->getLexer($lexer);
+        if (isset($this->config['terminals']) && is_array($this->config['terminals'])) {
+            foreach (array_keys($this->config['terminals']) as $lexer) {
+                $this->getTerminal($lexer);
             }
         }
         // init parser
-        if (isset($this->config['parser']) && is_array($this->config['parser'])) {
-            foreach (array_keys($this->config['parser']) as $parser) {
-                $this->getToken($parser);
+        if (isset($this->config['nonTerminals']) && is_array($this->config['nonTerminals'])) {
+            foreach (array_keys($this->config['nonTerminals']) as $parser) {
+                $this->getNonTerminal($parser);
             }
         }
     }
@@ -72,51 +78,47 @@ class Syntax
      */
     protected function initStatement($name)
     {
-        if (isset($this->tokens[$name])) {
-            return $this->tokens[$name];
+        if (isset($this->config['nonTerminals'][$name])) {
+            return $this->getNonTerminal($name);
         }
 
-        if (isset($this->config['parser'][$name])) {
-            return $this->getToken($name);
-        }
-
-        return $this->getLexer($name);
+        return $this->getTerminal($name);
     }
 
     /**
-     * @param string $lexerName
+     * @param string $name
      */
-    protected function getLexer($lexerName)
+    protected function getTerminal($name)
     {
-        if (!isset($this->lexers[$lexerName])) {
-            if (isset($this->config['lexer'][$lexerName])) {
-                $this->lexers[$lexerName] = $this->getLexerFactory()->getLexer(
-                    $lexerName, $this->config['lexer'][$lexerName]
+        if (!isset($this->terminals[$name])) {
+            if (isset($this->config['terminals'][$name])) {
+                $this->terminals[$name] = $this->getLexerFactory()->getLexer(
+                    $name, $this->config['terminals'][$name]
                 );
             } else {
-                $this->lexers[$lexerName] = $this->getLexerFactory()->getLexer($lexerName, $lexerName);
+                $this->terminals[$name] = $this->getLexerFactory()->getLexer($name, $name);
             }
         }
 
-        return $this->lexers[$lexerName];
+        return $this->terminals[$name];
     }
 
     /**
-     * @param string $parserName
+     * @param string $name
      *
      * @return \Jungle\Parser\ExpressionContainer
      */
-    public function getToken($parserName)
+    public function getNonTerminal($name)
     {
-        if (!isset($this->tokens[$parserName])) {
-            $this->tokens[$parserName] = new ExpressionContainer();
-            $this->tokens[$parserName]->setName($parserName);
+        if (!isset($this->nonTerminals[$name])) {
+            $this->nonTerminals[$name] = new ExpressionContainer();
+            $this->nonTerminals[$name]->setName($name);
 
-            foreach ($this->config['parser'][$parserName] as $ruleString) {
+            foreach ($this->config['nonTerminals'][$name] as $ruleString) {
                 $expression = new Expression();
                 $expression->parseStatement($ruleString);
 
-                $this->tokens[$parserName]->addExpression($expression);
+                $this->nonTerminals[$name]->addExpression($expression);
 
                 foreach ($expression->getTokens() as $token) {
                     $this->initStatement($token);
@@ -124,15 +126,25 @@ class Syntax
             }
         }
 
-        return $this->tokens[$parserName];
+        return $this->nonTerminals[$name];
     }
 
     /**
      * @return ExpressionContainer[]
      */
-    public function getTokens()
+    public function getNonTerminals()
     {
-        return $this->tokens;
+        return $this->nonTerminals;
+    }
+
+    /**
+     * Return value of Terminals
+     *
+     * @return LexerInterface[]
+     */
+    public function getTerminals()
+    {
+        return $this->terminals;
     }
 
     /**
@@ -177,6 +189,23 @@ class Syntax
             $this->lexerFactory = new LexerFactory();
         }
         return $this->lexerFactory;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return int
+     */
+    public function getAlias($name)
+    {
+        $name = trim($name);
+
+        $alias = array_search($name, $this->aliases);
+        if ($alias === false) {
+            return array_push($this->aliases, $string) - 1;
+        }
+
+        return $alias;
     }
 
 }

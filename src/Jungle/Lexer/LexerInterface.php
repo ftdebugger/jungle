@@ -8,6 +8,7 @@
 namespace Jungle\Lexer;
 
 
+use Jungle\Code\GeneratorInterface;
 use Jungle\Stream\AbstractStream;
 use Jungle\Token\Token;
 
@@ -15,10 +16,10 @@ interface LexerInterface
 {
 
     /**
-     * @param AbstractStream $stream
+     * @param \Jungle\Code\GeneratorInterface $input
      *
-     * @return bool|Token
+     * @return string
      */
-    public function parse(AbstractStream $stream);
+    public function getGenerator(GeneratorInterface $input);
 
 }

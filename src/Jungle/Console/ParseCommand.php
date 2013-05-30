@@ -46,20 +46,10 @@ class ParseCommand extends Command
 
         $syntax = new Syntax($schema);
         $table = new Table();
-        $result = $table->fromSyntax($syntax);
-
-        include 'data/test2.php';
-
-        $parser = new \Test2();
-        $parser->setAction($result);
-        echo $parser->parse('1+2*3');
-
-//        var_dump($table);
-        exit;
+        $table->fromSyntax($syntax);
 
         $processorBuilder = new Processor\Builder();
-        $class = $processorBuilder->build($schema)->generate();
-        echo $class;
+        $class = $processorBuilder->build($syntax, $table)->generate();
 
         file_put_contents('data/test.php', '<?php' . PHP_EOL . $class);
 

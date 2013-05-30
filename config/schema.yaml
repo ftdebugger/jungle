@@ -1,4 +1,4 @@
-parser:
+nonTerminals:
   E:
     - E + E { $$ = $1 + $3; }
     - E * E { $$ = $1 * $3; }
@@ -9,5 +9,5 @@ parser:
     - digit NUM { $$ = $1 . $2; }
     - #empty
 
-lexer:
+terminals:
   digit: '/^[0-9]/'
