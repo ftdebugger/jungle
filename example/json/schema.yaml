@@ -17,6 +17,7 @@ nonTerminals:
     - field { $$ = $1; }
 
   value:
+    - boolean
     - array
     - object
     - number { $$ = (float)$1; }
@@ -37,6 +38,7 @@ nonTerminals:
     -
 
 terminals:
+  boolean: '/(true|false)/i'
   number: '/^[0-9]+(\.\d+|e\d+)?/'
   char:
     value: '/^[^"\\][ ]*/'
