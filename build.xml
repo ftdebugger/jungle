@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="/usr/share/php5/PEAR/data/phing/etc/phing-grammar.rng"
+        type="application/xml"
+        schematypens="http://relaxng.org/ns/structure/1.0"?>
+
+<project name="make_project" basedir="." default="build">
+
+
+    <target name="build-examples">
+        <exec executable="php">
+            <arg file="bin/jungle.php"/>
+            <arg value="parse"/>
+            <arg value="-c"/>
+            <arg value="Jungle\\Example\\Calculator"/>
+            <arg value="-o"/>
+            <arg file="example/calculator/Calculator.php"/>
+            <arg file="example/calculator/schema.yaml"/>
+        </exec>
+    </target>
+
+    <target name="run-example" depends="build-examples">
+        <exec executable="php" checkreturn="true" passthru="true">
+            <arg file="example/calculator/test.php"/>
+        </exec>
+    </target>
+
+    <target name="build" depends="build-examples">
+
+    </target>
+
+</project>

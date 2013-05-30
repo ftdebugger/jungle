@@ -16,7 +16,7 @@ use Jungle\Syntax;
 class Table
 {
 
-    const GLOBAL_TOKEN = 'E';
+    const GLOBAL_TOKEN = 'global';
 
     /**
      * Start token
@@ -92,9 +92,7 @@ class Table
         $this->ordered = new RuleSet();
 
         $this->terminals = [self::END_TOKEN];
-        $this->nonterminals = []; //new RuleSet();
-
-//        $this->terminals->addRule(new Rule('EOF'));
+        $this->nonterminals = [];
     }
 
     /**

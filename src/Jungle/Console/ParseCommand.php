@@ -30,7 +30,9 @@ class ParseCommand extends Command
     {
         $this->setName('parse');
         $this->setDescription('parse jungle file');
-        $this->addArgument('path', InputArgument::REQUIRED, 'path to file');
+        $this->addArgument('path', InputArgument::REQUIRED, 'path to scheme file');
+        $this->addOption('class', 'c', InputArgument::OPTIONAL, 'class name');
+        $this->addOption('output', 'o', InputArgument::OPTIONAL, 'output file');
     }
 
     /**
@@ -42,40 +44,26 @@ class ParseCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $yaml = new Yaml();
-        $schema = $yaml->parse(APP_ROOT . "/config/schema.yaml");
+        $schema = $yaml->parse($input->getArgument('path'));
 
         $syntax = new Syntax($schema);
         $table = new Table();
         $table->fromSyntax($syntax);
 
         $processorBuilder = new Processor\Builder();
-        $class = $processorBuilder->build($syntax, $table)->generate();
+        $class = $processorBuilder->build($syntax, $table);
 
-        file_put_contents('data/test.php', '<?php' . PHP_EOL . $class);
+        if ($input->getOption('class')) {
+            $class->setName($input->getOption('class'));
+        }
 
-        include 'data/test.php';
+        $content = '<?php' . PHP_EOL . PHP_EOL . $class->generate();
 
-        $test = new \Test();
-        var_dump($test->parse('1+2'));
-
-//        var_dump($result);
-
-        exit;
-
-
-        $parserBuilder = new Parser\Builder($schema['tokens']);
-        $parser = $parserBuilder->getParser();
-
-        $stream = new File($input->getArgument('path'));
-        $parser->parse($stream);
-
-        $lexerBuilder = new Lexer\Builder($schema);
-        $lexer = $lexerBuilder->build();
-
-        $tree = $lexer->getAST($parser);
-        var_dump($tree);
-//        $lexer = new Lexer($parser);
-//        $lexer->getAST();
+        if ($input->getOption('output')) {
+            file_put_contents($input->getOption('output'), $content);
+        } else {
+            echo $content;
+        }
     }
 
 

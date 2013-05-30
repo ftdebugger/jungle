@@ -189,7 +189,7 @@ for ($i = 0; $i < $count; $i++) {
     $args[] = $this->stack->pop();
 }
 
-return call_user_func_array([$this, 'reduce' . $index], $args);
+return call_user_func_array([$this, 'reduce' . $index], array_reverse($args));
 EOF;
         $method->setBody($body);
         $this->class->addMethodFromGenerator($method);

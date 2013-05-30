@@ -19,7 +19,7 @@ class LexerFactory
      */
     public function getLexer($name, $value)
     {
-        if ($value[0] == '/') {
+        if ($value[0] == '/' && strlen($value) > 2) {
             return new Regexp($value, $name);
         }
 
