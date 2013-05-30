@@ -9,8 +9,6 @@ namespace Jungle\Lexer;
 
 
 use Jungle\Code\GeneratorInterface;
-use Jungle\Stream\AbstractStream;
-use Jungle\Token\Token;
 
 interface LexerInterface
 {
@@ -21,5 +19,10 @@ interface LexerInterface
      * @return string
      */
     public function getGenerator(GeneratorInterface $input);
+
+    /**
+     * @param int $id
+     */
+    public function setId($id);
 
 }

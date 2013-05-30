@@ -16,6 +16,12 @@ use Jungle\Lexer\LexerInterface;
 
 class String implements LexerInterface
 {
+
+    /**
+     * @var int
+     */
+    protected $id;
+
     /**
      * @var string
      */
@@ -37,6 +43,14 @@ class String implements LexerInterface
     }
 
     /**
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
      * @param \Jungle\Code\GeneratorInterface $input
      *
      * @return string
@@ -45,8 +59,7 @@ class String implements LexerInterface
     {
         $function = new FunctionStatement('substr', [$input, 0, strlen($this->value)]);
         $function = new RawBlock(var_export($this->type, true) . ' === ' . $function);
-        $then = new RawBlock('return [' . var_export($this->type, true) . ', ' . var_export($this->value, true)
-        . '];');
+        $then = new RawBlock('return [' . $this->id . ', ' . var_export($this->value, true) . '];');
 
         return new IfStatement($function, $then);
     }

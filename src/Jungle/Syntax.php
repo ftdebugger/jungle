@@ -24,7 +24,7 @@ class Syntax
     protected $config;
 
     /**
-     * @var array
+     * @var LexerInterface[]
      */
     protected $terminals = [];
 
@@ -87,6 +87,8 @@ class Syntax
 
     /**
      * @param string $name
+     *
+     * @return \Jungle\Lexer\LexerInterface
      */
     protected function getTerminal($name)
     {
@@ -98,6 +100,8 @@ class Syntax
             } else {
                 $this->terminals[$name] = $this->getLexerFactory()->getLexer($name, $name);
             }
+
+            $this->terminals[$name]->setId($this->getAlias($name));
         }
 
         return $this->terminals[$name];
@@ -202,7 +206,7 @@ class Syntax
 
         $alias = array_search($name, $this->aliases);
         if ($alias === false) {
-            return array_push($this->aliases, $string) - 1;
+            return array_push($this->aliases, $name) - 1;
         }
 
         return $alias;

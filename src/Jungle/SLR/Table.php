@@ -33,6 +33,10 @@ class Table
      */
     const EPSILON_TOKEN = '__EPSILON__';
 
+    const ACTION_SHIFT = 0;
+    const ACTION_REDUCE = 1;
+    const ACTION_ACCEPT = 2;
+
     /**
      * @var Container
      */
@@ -74,6 +78,11 @@ class Table
     protected $reduces = array();
 
     /**
+     * @var Syntax
+     */
+    protected $syntax;
+
+    /**
      *
      */
     public function __construct()
@@ -93,6 +102,8 @@ class Table
      */
     public function fromSyntax(Syntax $syntax)
     {
+        $this->syntax = $syntax;
+
         $startRule = new Rule();
         $startRule->setId(0);
         $startRule->setLeft(self::START_TOKEN);
@@ -115,8 +126,6 @@ class Table
         $this->transition = new TransitionSet($this);
         $this->transition->process();
         $this->calculateTable();
-
-        return $this->table;
     }
 
     /**
@@ -143,36 +152,33 @@ class Table
     {
         $row = array();
         foreach ($state->getTransitions() as $token => $transition) {
-            if ($this->isTerminal($token)) {
-                $row[$token] = array('shift', $transition->getId());
-            } else {
-                $row[$token] = array('transition', $transition->getId());
-            }
+            $row[$this->getAlias($token)] = array(self::ACTION_SHIFT, $transition->getId());
         }
 
         foreach ($state->getSituationSet()->getIterator() as $situation) {
             if (!$situation->hasNext()) {
                 if ($situation->getRule()->getLeft() == self::START_TOKEN) {
-                    $action = array('accept');
+                    $action = array(self::ACTION_ACCEPT);
                 } else {
                     $action = array(
-                        'reduce',
-                        //$situation->getRule()->getId(),
-                        'callback' => $this->getReduce($situation->getRule()->getCallback()),
-                        'right' => count($situation->getRule()->getRight()),
-                        'left' => $situation->getRule()->getLeft()
+                        self::ACTION_REDUCE,
+                        $this->getReduce($situation->getRule()->getCallback()), // callback
+                        count($situation->getRule()->getRight()), // right count
+                        $this->getAlias($situation->getRule()->getLeft()) // left
                     );
                 }
 
                 foreach ($this->getFollowTokens($situation->getRule()->getLeft()) as $token) {
-                    if (isset($row[$token])) {
-                        if ($row[$token][0] == 'reduce') {
-                            if ($situation->getRule()->getId() < $row[$token][1]) {
-                                $row[$token] = $action;
+                    $tokenId = $this->getAlias($token);
+
+                    if (isset($row[$tokenId])) {
+                        if ($row[$tokenId][0] == self::ACTION_REDUCE) {
+                            if ($situation->getRule()->getId() < $row[$tokenId][1]) {
+                                $row[$tokenId] = $action;
                             }
                         }
                     } else {
-                        $row[$token] = $action;
+                        $row[$tokenId] = $action;
                     }
                 }
             }
@@ -390,6 +396,16 @@ class Table
     public function getTable()
     {
         return $this->table;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return int
+     */
+    public function getAlias($name)
+    {
+        return $this->syntax->getAlias($name);
     }
 
 }

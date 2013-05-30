@@ -8,11 +8,9 @@
 namespace Jungle\Processor;
 
 
+use Jungle\Code\PropertyValueGenerator;
 use Jungle\Code\Statement\Container;
-use Jungle\Code\Statement\FunctionStatement;
-use Jungle\Code\Statement\IfStatement;
 use Jungle\Code\Statement\RawBlock;
-use Jungle\Code\Statement\ScalarStatement;
 use Jungle\Code\Statement\VariableStatement;
 use Jungle\Code\Statement\WhileStatement;
 use Jungle\SLR\Table;
@@ -23,9 +21,7 @@ use Zend\Code\Generator\DocBlockGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Generator\ParameterGenerator;
 use Zend\Code\Generator\PropertyGenerator;
-use Zend\Code\Generator\PropertyValueGenerator;
 use Zend\Code\Generator\ValueGenerator;
-use Zend\Code\Reflection\ClassReflection;
 
 class Builder
 {
@@ -53,7 +49,7 @@ class Builder
         $this->class->addPropertyFromGenerator($this->getStackProperty());
 
         $this->buildParseMethod();
-        $this->buildTokenizerMethod();
+        $this->buildTokenizerMethod($syntax);
         $this->buildGetNextTokenMethod($syntax);
         $this->buildReduces($table->getReduces());
 
@@ -102,7 +98,7 @@ class Builder
 
     /**
      */
-    protected function buildTokenizerMethod()
+    protected function buildTokenizerMethod(Syntax $syntax)
     {
         $while = new WhileStatement(new RawBlock('strlen($data) !== 0'));
         $while->setBody($whileBody = new Container());
@@ -114,7 +110,7 @@ class Builder
         $methodBody = new Container();
         $methodBody->addLine(new RawBlock('$tokens = [];'));
         $methodBody->addLine($while);
-        $methodBody->addLine(new RawBlock('$tokens[] = array(\'__END__\', \'\');'));
+        $methodBody->addLine(new RawBlock('$tokens[] = array('. $syntax->getAlias('__END__') .', \'\');'));
         $methodBody->addLine('return $tokens;');
 
         $method = new MethodGenerator('tokenizer', ['data']);
@@ -221,14 +217,14 @@ while (true) {
     }
 
     $action = $this->action[$state][$terminal];
-    if ($action[0] == 'shift' || $action[0] == 'transition') {
+    if ($action[0] === 0) {
         $this->stack->push($token[1]);
         $this->stack->push($action[1]);
         array_shift($tokens);
-    } elseif ($action[0] == 'reduce') {
-        $value = $this->reduce($action['right'], $action['callback']);
-        array_unshift($tokens, array($action['left'], $value));
-    } elseif ($action[0] == 'accept') {
+    } elseif ($action[0] === 1) {
+        $value = $this->reduce($action[2], $action[1]);
+        array_unshift($tokens, array($action[3], $value));
+    } elseif ($action[0] === 2) {
         $this->stack->pop();
         return $this->stack->pop();
     } else {

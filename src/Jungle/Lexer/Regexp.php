@@ -22,6 +22,11 @@ class Regexp implements LexerInterface
     /**
      * @var int
      */
+    protected $id;
+
+    /**
+     * @var int
+     */
     protected $type;
 
     /**
@@ -40,6 +45,16 @@ class Regexp implements LexerInterface
     }
 
     /**
+     * Set value of Id
+     *
+     * @param int $id
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    /**
      * @param \Jungle\Code\GeneratorInterface $input
      *
      * @return string
@@ -53,7 +68,7 @@ class Regexp implements LexerInterface
                  new VariableStatement('match')
             )
         );
-        $then = new RawBlock('return [' . var_export($this->type, true) . ', $match[0]];');
+        $then = new RawBlock('return [' . $this->id . ', $match[0]];');
 
         return new IfStatement($function, $then);
     }
