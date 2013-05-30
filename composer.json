@@ -1,0 +1,22 @@
+{
+    "name": "ftdebugger/jungle",
+    "description": "PHP jungle",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Evgeny Shpilevsky",
+            "email": "evgeny@shpilevsky.com"
+        }
+    ],
+    "require": {
+        "zendframework/zend-code": "2.2.0",
+        "symfony/console": "2.0.7",
+        "phpunit/phpunit": "3.7.20",
+        "symfony/yaml": "2.0.7"
+    },
+    "autoload": {
+        "psr-0": {
+            "Jungle": "src/"
+        }
+    }
+}
