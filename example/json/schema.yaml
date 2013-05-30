@@ -17,9 +17,9 @@ nonTerminals:
     - field { $$ = $1; }
 
   value:
-    - boolean
     - array
     - object
+    - boolean { $$ = strtolower($1) == 'true'; }
     - number { $$ = (float)$1; }
     - string
 
@@ -38,7 +38,7 @@ nonTerminals:
     -
 
 terminals:
-  boolean: '/(true|false)/i'
+  boolean: '/^(true|false)/i'
   number: '/^[0-9]+(\.\d+|e\d+)?/'
   char:
     value: '/^[^"\\][ ]*/'
