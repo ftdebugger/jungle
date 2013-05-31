@@ -45,6 +45,11 @@ class Syntax
     protected $aliases = array();
 
     /**
+     * @var string
+     */
+    protected $whitespace = 'ignore';
+
+    /**
      * @param array $config
      */
     public function __construct($config)
@@ -58,12 +63,16 @@ class Syntax
      */
     protected function parse()
     {
-//        // init lexer
-//        if (isset($this->config['terminals']) && is_array($this->config['terminals'])) {
-//            foreach (array_keys($this->config['terminals']) as $lexer) {
-//                $this->getTerminal($lexer);
-//            }
-//        }
+        if (isset($this->config['whitespace'])) {
+            $this->whitespace = $this->config['whitespace'];
+        }
+
+        // init lexer
+        if (isset($this->config['terminals']) && is_array($this->config['terminals'])) {
+            foreach (array_keys($this->config['terminals']) as $index => $lexer) {
+                $this->getTerminal($lexer)->setWeight($index + 1);
+            }
+        }
         // init parser
         if (isset($this->config['nonTerminals']) && is_array($this->config['nonTerminals'])) {
             foreach (array_keys($this->config['nonTerminals']) as $parser) {
@@ -221,4 +230,19 @@ class Syntax
         return $alias;
     }
 
+    /**
+     * @return bool
+     */
+    public function isIgnoreWhitespace()
+    {
+        return $this->whitespace == 'ignore';
+    }
+
+    /**
+     * @return bool
+     */
+    public function isKeepWhitespace()
+    {
+        return $this->whitespace == 'keep';
+    }
 }
