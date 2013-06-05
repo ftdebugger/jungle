@@ -118,7 +118,7 @@ class Json
             return [2, $match[0]];
         }
 
-        throw new \Exception("Syntax error");
+        throw new \Exception("Syntax error. Cannot parse '" . substr($data, 0, 100) . "'");
     }
 
     protected function reduce($count, $index)

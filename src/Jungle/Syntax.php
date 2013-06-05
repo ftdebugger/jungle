@@ -73,6 +73,11 @@ class Syntax
                 $this->getTerminal($lexer)->setWeight($index + 1);
             }
         }
+
+        if (isset($this->config['rules'])) {
+            $this->config['nonTerminals'] = $this->config['rules'];
+        }
+
         // init parser
         if (isset($this->config['nonTerminals']) && is_array($this->config['nonTerminals'])) {
             foreach (array_keys($this->config['nonTerminals']) as $parser) {
@@ -162,7 +167,7 @@ class Syntax
             $this->terminals, function ($a, $b) {
                 /** @var $a AbstractLexer */
                 /** @var $b AbstractLexer */
-                return $a->getWeight()-$b->getWeight();
+                return $a->getWeight() - $b->getWeight();
             }
         );
 

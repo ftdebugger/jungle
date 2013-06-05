@@ -1,0 +1,64 @@
+rules:
+  global:
+    - document
+
+  document:
+    - document block    { $1->addBlock($2); $$ = $1; }
+    - block             { $$ = new Document(); $$->addBlock($1); }
+
+  block:
+    - selectors { rules } { $$ = new Block($1, $3); }
+
+  selectors:
+    - selectors , selector { $$ = $1; $$[] = $3; }
+    - selector          { $$ = array($1); }
+
+  selector:
+    - selector class    { $$ = $1; $1->addSelector($2); }
+    - selector id       { $$ = $1; $1->addSelector($2); }
+    - selector tag      { $$ = $1; $1->addSelector($2); }
+    - selector color    { $$ = $1; $1->addSelector($2); }
+    - class             { $$ = new Selector($1); }
+    - id                { $$ = new Selector($1); }
+    - color             { $$ = new Selector($1); } # id in fact
+    - tag               { $$ = new Selector($1); }
+
+  rules:
+    - 'rules rule ;     { $$ = $1; $$[] = $2; }'
+    - 'rule ;           { $$ = array($1); }'
+    - '                 { $$ = array(); }'
+
+  rule:
+    - 'background : backgroundValue {$$ = new Rule($1, $3);}'
+    - 'padding : size4      {$$ = new Rule($1, $3);}'
+    - 'margin : size4       {$$ = new Rule($1, $3);}'
+    - 'name : color         { $$ = new Rule($1, $3); }'
+
+  backgroundValue:
+    - backgroundValue url
+    - backgroundValue color
+    - backgroundValue repeate-x
+    - backgroundValue repeate-y
+    - backgroundValue repeate-y
+    - url
+    - color
+
+  size4:
+    - size size size size   { $$ = [$1, $2, $3, $4]; }
+    - size size size        { $$ = [$1, $2, $3]; }
+    - size size             { $$ = [$1, $2]; }
+    - size                  { $$ = [$1]; }
+    - inherit               { $$ = ['inherit']; }
+
+  size:
+    - size_r
+    - auto
+
+terminals:
+  url: /^url\([^)]+\)/i
+  size_r: /^(-?([0-9]+(\.[0-9]+)?|\.[0-9]+)(px|%|em|pt)?)/
+  class: /^\.[-_a-z0-9]+\s?/Si
+  color: /^#[0-9a-f]{1,6}\s?/i
+  id: /^#[-_a-z0-9]+\s?/i
+  tag: /^(a|abbr|acronym|address|applet|area|article|aside|audio|b|base|basefont|bdi|bdo|big|blockqoute|body|br|button|canvas|caption|center|cite|code|col|colgroup|command|datalist|dd|del|details|dfn|dialog|dir|div|dl|dt|em|embed|fieldset|figcaption|figure|font|footer|form|frame|frameset|h[1-6r]|head|header|hgroup|html|i|iframe|img|input|ins|kdb|keygen|label|legend|li|link|map|mark|menu|meta|meter|nav|noframes|noscript|object|ol|optgroup|option|output|p|param|pre|progress|q|rp|rt|ruby|s|samp|script|section|select|small|source|span|strike|strong|style|sub|summary|sup|table|tbody|td|textarea|tfoot|th|thread|time|title|tr|track|tt|u|ul|var|video|wbr)(?![a-z])\s?/
+  name: /^[a-z-]+/

@@ -140,7 +140,7 @@ class Builder
             $methodBody->addLine($statement);
         }
 
-        $methodBody->addLine('throw new \Exception("Syntax error");');
+        $methodBody->addLine('throw new \Exception("Syntax error. Cannot parse \'" . substr($data, 0, 100) . "\'");');
 
         $this->class->addMethodFromGenerator($method);
     }

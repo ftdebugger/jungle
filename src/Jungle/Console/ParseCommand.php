@@ -29,8 +29,8 @@ class ParseCommand extends Command
     protected function configure()
     {
         $this->setName('parse');
-        $this->setDescription('parse jungle file');
-        $this->addArgument('path', InputArgument::REQUIRED, 'path to scheme file');
+        $this->setDescription('parse schema file');
+        $this->addArgument('schema', InputArgument::REQUIRED, 'path to scheme file');
         $this->addOption('class', 'c', InputArgument::OPTIONAL, 'class name');
         $this->addOption('output', 'o', InputArgument::OPTIONAL, 'output file');
     }
@@ -43,8 +43,9 @@ class ParseCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $yaml = new Yaml();
-        $schema = $yaml->parse($input->getArgument('path'));
+        $reader = new Syntax\Reader();
+        $schema = $reader->parseFile($input->getArgument('schema'));
+        var_dump($schema); exit;
 
         $syntax = new Syntax($schema);
         $table = new Table();
