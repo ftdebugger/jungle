@@ -194,7 +194,7 @@ class Table
     {
         $tokens = [];
 
-        foreach ($syntax->getNonTerminals() as $token) {
+        foreach ($syntax->getRules() as $token) {
             foreach ($token->getExpressions() as $expression) {
                 $rule = new Rule();
                 $rule->setLeft($token->getName());

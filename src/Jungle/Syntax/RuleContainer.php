@@ -5,14 +5,16 @@
  * @date       5/27/13 18:20
  */
 
-namespace Jungle\Parser;
+namespace Jungle\Syntax;
 
 
-class ExpressionContainer
+use Jungle\Syntax\Rule;
+
+class RuleContainer
 {
 
     /**
-     * @var Expression[]
+     * @var Rule[]
      */
     protected $expressions;
 
@@ -22,9 +24,9 @@ class ExpressionContainer
     protected $name;
 
     /**
-     * @param Expression $expression
+     * @param Rule $expression
      */
-    public function addExpression(Expression $expression)
+    public function addExpression(Rule $expression)
     {
         $this->expressions[] = $expression;
     }
@@ -32,7 +34,7 @@ class ExpressionContainer
     /**
      * Set value of Expressions
      *
-     * @param \Jungle\Parser\Expression[] $expressions
+     * @param \Jungle\Syntax\Rule[] $expressions
      */
     public function setExpressions($expressions)
     {
@@ -42,7 +44,7 @@ class ExpressionContainer
     /**
      * Return value of Expressions
      *
-     * @return \Jungle\Parser\Expression[]
+     * @return \Jungle\Syntax\Rule[]
      */
     public function getExpressions()
     {

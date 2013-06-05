@@ -5,10 +5,10 @@
  * @date       5/27/13 18:16
  */
 
-namespace Jungle\Parser;
+namespace Jungle\Syntax;
 
 
-class Expression
+class Rule
 {
 
     /**

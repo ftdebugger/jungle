@@ -11,10 +11,8 @@ namespace Jungle;
 use Jungle\Lexer\AbstractLexer;
 use Jungle\Lexer\LexerFactory;
 use Jungle\Lexer\LexerInterface;
-use Jungle\Parser\Expression;
-use Jungle\Parser\ExpressionContainer;
-use Jungle\Parser\Rule;
-use Jungle\Parser\RuleSet;
+use Jungle\Syntax\Rule;
+use Jungle\Syntax\RuleContainer;
 
 class Syntax
 {
@@ -30,9 +28,9 @@ class Syntax
     protected $terminals = [];
 
     /**
-     * @var ExpressionContainer[]
+     * @var RuleContainer[]
      */
-    protected $nonTerminals = [];
+    protected $rules = [];
 
     /**
      * @var LexerFactory
@@ -74,14 +72,10 @@ class Syntax
             }
         }
 
-        if (isset($this->config['rules'])) {
-            $this->config['nonTerminals'] = $this->config['rules'];
-        }
-
         // init parser
-        if (isset($this->config['nonTerminals']) && is_array($this->config['nonTerminals'])) {
-            foreach (array_keys($this->config['nonTerminals']) as $parser) {
-                $this->getNonTerminal($parser);
+        if (isset($this->config['rules']) && is_array($this->config['rules'])) {
+            foreach (array_keys($this->config['rules']) as $parser) {
+                $this->getRule($parser);
             }
         }
     }
@@ -89,12 +83,12 @@ class Syntax
     /**
      * @param string $name
      *
-     * @return \Jungle\Parser\ExpressionContainer
+     * @return \Jungle\Syntax\RuleContainer
      */
     protected function initStatement($name)
     {
-        if (isset($this->config['nonTerminals'][$name])) {
-            return $this->getNonTerminal($name);
+        if (isset($this->config['rules'][$name])) {
+            return $this->getRule($name);
         }
 
         return $this->getTerminal($name);
@@ -125,19 +119,19 @@ class Syntax
     /**
      * @param string $name
      *
-     * @return \Jungle\Parser\ExpressionContainer
+     * @return \Jungle\Syntax\RuleContainer
      */
-    public function getNonTerminal($name)
+    public function getRule($name)
     {
-        if (!isset($this->nonTerminals[$name])) {
-            $this->nonTerminals[$name] = new ExpressionContainer();
-            $this->nonTerminals[$name]->setName($name);
+        if (!isset($this->rules[$name])) {
+            $this->rules[$name] = new RuleContainer();
+            $this->rules[$name]->setName($name);
 
-            foreach ($this->config['nonTerminals'][$name] as $ruleString) {
-                $expression = new Expression();
+            foreach ($this->config['rules'][$name] as $ruleString) {
+                $expression = new Rule();
                 $expression->parseStatement($ruleString);
 
-                $this->nonTerminals[$name]->addExpression($expression);
+                $this->rules[$name]->addExpression($expression);
 
                 foreach ($expression->getTokens() as $token) {
                     $this->initStatement($token);
@@ -145,15 +139,15 @@ class Syntax
             }
         }
 
-        return $this->nonTerminals[$name];
+        return $this->rules[$name];
     }
 
     /**
-     * @return ExpressionContainer[]
+     * @return RuleContainer[]
      */
-    public function getNonTerminals()
+    public function getRules()
     {
-        return $this->nonTerminals;
+        return $this->rules;
     }
 
     /**
@@ -172,27 +166,6 @@ class Syntax
         );
 
         return $this->terminals;
-    }
-
-    /**
-     * @param string $parserName
-     * @param string $ruleString
-     *
-     * @return Rule
-     */
-    protected function getRule($parserName, $ruleString)
-    {
-        $rule = new Rule();
-        $rule->setLeft($parserName);
-        $rule->setRight(
-            array_map(
-                function ($rule) {
-                    return $this->initStatement($rule);
-                }, preg_split("#[ \t]+#", $ruleString)
-            )
-        );
-
-        return $rule;
     }
 
     /**

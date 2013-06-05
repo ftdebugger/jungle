@@ -1,4 +1,4 @@
-nonTerminals:
+rules:
   global:
     - expression
 
