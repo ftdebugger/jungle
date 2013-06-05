@@ -14,7 +14,7 @@
             <arg value="Jungle\\Example\\Calculator"/>
             <arg value="-o"/>
             <arg file="example/calculator/Calculator.php"/>
-            <arg file="example/calculator/schema.yaml"/>
+            <arg file="example/calculator/schema.jungle"/>
         </exec>
 
         <exec executable="php">
@@ -24,7 +24,7 @@
             <arg value="Jungle\\Example\\Json"/>
             <arg value="-o"/>
             <arg file="example/json/Json.php"/>
-            <arg file="example/json/schema.yaml"/>
+            <arg file="example/json/schema.jungle"/>
         </exec>
 
         <exec executable="php" passthru="true">
@@ -34,7 +34,7 @@
             <arg value="Jungle\\Example\\Css\\Parser"/>
             <arg value="-o"/>
             <arg file="example/css/CSS/Parser.php"/>
-            <arg file="example/css/schema.yaml"/>
+            <arg file="example/css/schema.jungle"/>
         </exec>
     </target>
 

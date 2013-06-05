@@ -45,7 +45,6 @@ class ParseCommand extends Command
     {
         $reader = new Syntax\Reader();
         $schema = $reader->parseFile($input->getArgument('schema'));
-        var_dump($schema); exit;
 
         $syntax = new Syntax($schema);
         $table = new Table();

@@ -62,12 +62,12 @@ class Reader
                     $name = $match['name'];
                 }
 
-                if (preg_match("#^(?<name>[a-z0-9_-]+):(?<value>.+)$#i", $line, $match)) {
+                if (preg_match("#^(?<name>[a-z0-9_-]+):\\s*(?<value>.+)$#i", $line, $match)) {
                     $result[$match['name']] = $match['value'];
                 }
 
-                if (preg_match('#^-\s*(?<value>.+)$#Si', $line, $match)) {
-                    $result[] = $match['value'];
+                if ($line[0] == '-') {
+                    $result[] = ltrim(substr($line, 1));
                 }
 
                 array_shift($lines);
