@@ -6,7 +6,7 @@ Jungle - is a SLR parser generator, which written on php and for php
 Usage
 =====
 
-First of all, prepare `.jungle` file whith your syntax. It's simillar to yaml file, but more simple
+First of all, prepare `.jungle` file with your syntax. It's simillar to yaml file, but more simple
 
 ```
 // jungle format not supported comments now,
@@ -19,7 +19,7 @@ rules:
   expression: // new line and char '-' tell about productions
     - component
     - expression + component {$$ = $1 + $3;} // { between braces php code }
-    - expression - component {$$ = $1 - $3;} // { '+' automaticly will be added to terminals as literal }
+    - expression - component {$$ = $1 - $3;} // '+' and '-' automaticly will be added to terminals as literal
 
   factor:
     - number { $$ = (float)$1; } // $1 means first token
@@ -35,7 +35,7 @@ rules:
     - power ^ factor {$$ = pow($1, $3);}
 
 terminals:
-  number: /^[0-9]+/ // /^I AM REGEXP/, if no /^/ specify - then is is string
+  number: /^[0-9]+/ // /^I AM REGEXP/, if no /^/ specify - then it is string
 ```
 
 when syntax file is ready, you can call
