@@ -1,6 +1,6 @@
 {
     "name": "ftdebugger/jungle",
-    "description": "PHP jungle",
+    "description": "PHP SRL parser generator",
     "minimum-stability": "stable",
     "authors": [
         {
